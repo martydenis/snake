@@ -135,7 +135,7 @@
     #choose__difficulty label {
       padding: 4px 0 4px 10px;
       cursor: pointer;
-      color: #d1b0c5;
+      color: #ffffff;
 
       transition: color 0.25s ease-out;
     }
@@ -172,7 +172,17 @@
     }
 
     #choose__difficulty input:checked + label {
-      color: #ffffff;
+      color: #ed8f5b;
+    }
+
+    #pause-button {
+      position: fixed;
+      top: 4px;
+      right: 4px;
+      color: white;
+      line-height: 32px;
+      width: 32px;
+      text-align: center;
     }
 
     .hidden {
@@ -198,14 +208,14 @@
       <div data-menu-type="main">
         <p>Choose a difficulty</p>
         <ul id="choose__difficulty">
-          <li><input type="radio" name="choose__difficulty" id="easy" value="8_6_350"><label for="easy">6 x 8 - Slow</label></li>
-          <li><input type="radio" name="choose__difficulty" id="medium" value="10_8_275" checked><label for="medium">8 x 11 - Medium</label></li>
-          <li><input type="radio" name="choose__difficulty" id="difficult" value="15_11_200"><label for="difficult">11 x 14 - Fast</label></li>
+          <li><input type="radio" name="choose__difficulty" id="easy" value="6_8_325"><label for="easy">Easy</label></li>
+          <li><input type="radio" name="choose__difficulty" id="medium" value="8_10_275" checked><label for="medium">Normal</label></li>
+          <li><input type="radio" name="choose__difficulty" id="difficult" value="11_14_225"><label for="difficult">Hard</label></li>
         </ul>
       </div>
 
       <ul class="menu__buttons">
-        <li data-menu-type="main grid"><button type="submit" class="menu__play btn btn__primary">Play</button></li>
+        <li data-menu-type="main"><button type="submit" class="menu__play btn btn__primary">Play</button></li>
         <li data-menu-type="won lost" class="hidden"><button type="submit" class="menu__play btn btn__primary">Replay</button></li>
         <!-- <li data-menu-type="main"><button class="menu__grid btn btn__secondary">Custom grid size</button></li> -->
         <li data-menu-type="pause" class="hidden"><button type="button" class="menu__resume btn btn__primary">Resume</button></li>
@@ -213,6 +223,8 @@
       </ul>
     </form>
   </div>
+
+  <a href="#" id="pause-button" class="hidden" data-menu-type="off">||</a>
 
   <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
   <script src="<?php echo $js_path; ?>tools<?php echo ($is_prod ? '.min' : '') ; ?>.js"></script>
@@ -261,10 +273,9 @@
       directions: [],
 
       init: function () {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.state = 'waiting';
+        this.direction = [];
         this.resize();
-
-        this.drawCell(this.start.x, this.start.y, this.colors.head);
 
         if (touchDevice) {
           this.joystick = new Joystick({
@@ -284,11 +295,7 @@
             }
           }).draw();
         }
-
-        this.updateMenu('off');
-        this.state = 'waiting';
-        this.direction = [];
-
+        
         snake = [{
           x: this.start.x,
           y: this.start.y,
@@ -303,11 +310,13 @@
         }
 
         this.freeCells.delete(this.start.x + '-' + this.start.y);
-
         this.placeCandy();
+        this.updateMenu('off');
+
+        this.drawGame();
       },
 
-      prepareCanvases: function () {
+      prepareCanvas: function () {
         const gameRatio = this.cols / this.rows;
         const windowRatio = $('#canvas-container').width() / $('#canvas-container').height();
 
@@ -382,6 +391,7 @@
           // Place another one or game is won
           if (this.freeCells.size > 0) {
             this.placeCandy();
+            this.drawCell(this.candy.x, this.candy.y, this.colors.candy, this.candySize);
           } else {
             this.won();
             return;
@@ -404,8 +414,6 @@
           x: x,
           y: y,
         }
-
-        this.drawCell(x, y, this.colors.candy, this.candySize);
       },
 
       drawCell: function (x, y, color, size) {
@@ -423,6 +431,17 @@
         ctx.rect(dpi(pxX), dpi(pxY), dpi(size), dpi(size));
         ctx.fillStyle = color;
         ctx.fill();
+      },
+
+      drawGame: function () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        this.drawCell(this.candy.x, this.candy.y, this.colors.candy, this.candySize);
+
+        for (let s = 0; s < snake.length; s++) {
+          const bodypart = snake[s];
+          
+          this.drawCell(bodypart.x, bodypart.y, (s == 0 ? this.colors.head : this.colors.body));
+        }
       },
 
       changeDirection: function (direction) {
@@ -453,18 +472,12 @@
         this.speed = parseInt(difficultyValues[2]);
         this.totalCells = this.cols * this.rows;
 
-        this.prepareCanvases();
+        this.prepareCanvas();
 
-        if (this.state == 'off')
+        if (this.state != 'playing' && this.state != 'waiting')
           return;
 
-        this.drawCell(this.candy.x, this.candy.y, this.colors.candy, this.candySize);
-
-        for (let s = 0; s < snake.length; s++) {
-          const bodypart = snake[s];
-          
-          this.drawCell(bodypart.x, bodypart.y, (s == 0 ? this.colors.head : this.colors.body));
-        }
+        this.drawGame();
       },
 
       reset: function () {
@@ -495,20 +508,20 @@
       },
 
       updateMenu: function(type, titleText, btnText) {
+        const $elements = $('[data-menu-type]');
+        
         this.menu = type;
-
+        $elements.hide();
+        $elements.filter((i, el) => $(el).data('menu-type').split(' ').includes(type)).show();
+        
         if (type == 'off') {
           $('#menu').removeClass('active');
         } else {
-          const $elements = $('#menu').find('[data-menu-type]');
-
           if (titleText !== undefined)
             $('.menu__title').text(titleText);
           if (btnText !== undefined)
             $('.menu__play').text(btnText);
 
-          $elements.hide();
-          $elements.filter((i, el) => $(el).data('menu-type').split(' ').includes(type)).show();
           $('#menu').addClass('active');
         }
 
@@ -739,7 +752,7 @@
     // Event Listeners
     $('.menu__resume').on('click', function (e) {
       e.preventDefault();
-      game.play();
+      game.updateMenu('off').play();
     });
 
     $('.menu__main').on('click', function (e) {
@@ -754,6 +767,12 @@
     $('#menu__form').on('submit', function(e) {
       e.preventDefault();
       game.init();
+      return false;
+    });
+
+    $('#pause-button').on('click', function(e) {
+      e.preventDefault();
+      game.updateMenu('pause').pause();
       return false;
     });
 
@@ -785,7 +804,7 @@
         switch (e.code) {
           case 'Space':
           case 'Escape':
-            game.play();
+            game.updateMenu('off').play();
             break;
         }
 
@@ -796,7 +815,7 @@
             game.init();
             break;
           case 'Escape':
-            game.updateMenu('main');
+            game.reset();
             break;
         }
 
