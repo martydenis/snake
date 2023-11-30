@@ -30,7 +30,7 @@ var game = {
     y: 1
   },
   state: 'off', // off, pause, playing, waiting
-  menu: 'main', // off, main, pause, won, lost
+  menu: 'main', // off, main, pause, won, lost, controls
   colors: {
     candy: '#9C4368',
     head: '#ED8F5B',
@@ -265,31 +265,44 @@ var game = {
   pause: function() {
     this.state = 'pause';
     clearTimeout(this.timer);
-    
+
     return this;
   },
 
   play: function() {
     this.state = 'playing';
     this.animate();
-    
+
     return this;
   },
 
   updateMenu: function(type, titleText, btnText) {
+    const self = this;
     const $elements = $('[data-menu-type]');
-    
-    this.menu = type;
+
+    self.menu = type;
     $elements.hide();
-    $elements.filter((i, el) => $(el).data('menu-type').split(' ').includes(type)).show();
-    
+    $elements.filter((i, el) => {
+      let result = $(el).data('menu-type').split(' ').includes(type);
+
+      if (result && $(el).data('state-type')) {
+        return $(el).data('state-type').split(' ').includes(self.state)
+      }
+
+      return result;
+    }).show();
+
+
     if (type == 'off') {
       $('#menu').removeClass('active');
     } else {
-      if (titleText !== undefined)
+      if (titleText !== undefined) {
         $('.menu__title').text(titleText);
-      if (btnText !== undefined)
+      }
+
+      if (btnText !== undefined) {
         $('.menu__play').text(btnText);
+      }
 
       $('#menu').addClass('active');
     }
@@ -324,7 +337,7 @@ var game = {
 
     if (self.state == 'playing') {
       self.nextStep();
-    }        
+    }
   },
 }
 
@@ -416,7 +429,7 @@ function Joystick(options) {
         }
       } else {
         _hidden = false;
-        
+
         self.move(x, y);
       }
 
@@ -529,8 +542,18 @@ $('.menu__main').on('click', function (e) {
   game.reset();
 });
 
+$('.menu__controls').on('click', function (e) {
+  e.preventDefault();
+  game.updateMenu('controls')
+});
+
 $('.menu__input').on('focus', function(e) {
   $(this).select();
+});
+
+$('.menu__pause').on('click', function(e) {
+  e.preventDefault();
+  game.updateMenu('pause').pause();
 });
 
 $('#menu__form').on('submit', function(e) {
@@ -538,33 +561,6 @@ $('#menu__form').on('submit', function(e) {
   game.init();
   return false;
 });
-
-$('#pause-button').on('click', function(e) {
-  e.preventDefault();
-  game.updateMenu('pause').pause();
-  return false;
-});
-
-// getDirection = function (x, y) {
-//   const valueX = 0.5 - (x / innerWidth);
-//   const valueY = 0.5 - (y / innerHeight);
-
-//   if (Math.abs(valueX) > Math.abs(valueY)) {
-//     // horizontal
-//     if (valueX > 0) {
-//       return 'left';
-//     } else {
-//       return 'right';
-//     }
-//   } else {
-//     // vertical
-//     if (valueY > 0) {
-//       return 'up';
-//     } else {
-//       return 'down';
-//     }
-//   }
-// }
 
 window.addEventListener('resize', throttle(game.resize.bind(game), 200));
 
@@ -617,18 +613,3 @@ window.addEventListener('keydown', function (e) {
     game.play();
   }
 });
-
-// window.addEventListener('touchstart', function (e) {
-//   if (game.menu != 'off') {
-//     return;
-//   } else if (game.state == 'waiting') {
-//     game.play();
-//   }
-
-  // if (game.state == 'playing') {
-  //   const x = e.touches[0].pageX;
-  //   const y = e.touches[0].pageY;
-
-  //   game.changeDirection(getDirection(x, y));
-  // }
-// });

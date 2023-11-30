@@ -6,6 +6,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+*, *:before, *:after {
+  box-sizing: border-box;
+}
+
 html,
 body,
 canvas {
@@ -56,7 +60,7 @@ body {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 240px;
+  width: 260px;
   transform: translate(-50%, -50%);
   padding: 20px;
   background: var(--menu-bg);
@@ -176,4 +180,21 @@ body {
 
 .hidden {
   display: none;
+}
+
+#menu__controls {
+  font-size: 1.15rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: #e1b6c7;
+  font-family: 'Gill Sans', Calibri, sans-serif;
+}
+
+#menu__controls kbd {
+  color: #ffffff;
+  background: rgb(237 143 91 / 32%);
+  display: inline-block;
+  border-radius: 0.3rem;
+  padding: 0 0.25rem;
+  border: 1px solid #ed8f5b;
 }
