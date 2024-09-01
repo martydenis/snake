@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <base href="<?php echo !empty($route['path']) ? '/' . $route['path'] : './' ?>">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Bungee&display=swap" rel="stylesheet">
-        <link rel="icon" type="image/svg" href="../martindenis/favicon.svg" />
-        <link rel="stylesheet" type="text/css" href="./index.css" media="screen" />
+        <link rel="icon" type="image/svg" href="/favicon.svg"/>
+        <link rel="stylesheet" type="text/css" href="./index.css" media="screen"/>
         <title>Snake</title>
     </head>
     <body>
@@ -50,7 +51,7 @@
 
         <a href="#" id="pause-button" class="menu__pause hidden" data-menu-type="off">||</a>
 
-        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script src="./lib/jquery-3.5.1.min.js"></script>
         <script type="module" src="./index.js"></script>
     </body>
 </html>
